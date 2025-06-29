@@ -45,31 +45,43 @@ def run_mltraining():
         logger.error("Aucune feature disponible pour l'entraînement.")
         spark.stop()
         return
+
     df = df.dropna(subset=["Severity"] + features)
     if df.count() == 0:
         logger.error("Aucune donnée d'entraînement disponible après filtrage.")
         spark.stop()
         return
+
     df = df.dropna()
     if df.count() == 0:
         logger.error("Aucune donnée d'entraînement disponible après suppression des valeurs nulles.")
         spark.stop()
         return
+
     indexer = StringIndexer(inputCol="Severity", outputCol="label")
     df = indexer.fit(df).transform(df)
+
     assembler = VectorAssembler(inputCols=features, outputCol="features")
     df = assembler.transform(df)
+
+    df = df.persist()
+
     train, test = df.randomSplit([0.8, 0.2], seed=42)
-   
-    rf = RandomForestClassifier(featuresCol="features", labelCol="label", numTrees=20, maxBins=200)    
+    train = train.cache()
+
+    rf = RandomForestClassifier(featuresCol="features", labelCol="label", numTrees=20, maxBins=200)
     model = rf.fit(train)
+
     predictions = model.transform(test)
+
     evaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
     accuracy = evaluator.evaluate(predictions)
     logger.info(f"Accuracy du modèle : {accuracy:.4f}")
 
     model.write().overwrite().save("ml_model_rf")
     logger.info("Modèle sauvegardé sous ml_model_rf")
+
+    df.unpersist()
     spark.stop()
     logger.info("Fin du MLTraining.")
 

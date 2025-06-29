@@ -44,12 +44,10 @@ def run_preprocessor():
                 if 'ID' in df.columns:
                     df = df.filter(col('ID').isNotNull())
                 from pyspark.sql.functions import when, trim, lower, lit
-                # Table 1 : accidents
                 accidents_cols = [
                     'ID', 'Severity', 'Start_Time', 'End_Time', 'Start_Lat', 'Start_Lng',
                     'Description', 'City', 'County', 'State', 'Timezone'
                 ]
-
                 for colname in accidents_cols:
                     if colname not in df.columns:
                         if colname in ['Start_Lat', 'Start_Lng']:
@@ -59,32 +57,27 @@ def run_preprocessor():
                         else:
                             df = df.withColumn(colname, lit(None).cast('string'))
                 accidents_df = df.select(accidents_cols)
-
                 for colname in ['Start_Lat', 'Start_Lng']:
                     if colname in accidents_df.columns:
                         accidents_df = accidents_df.withColumn(colname, col(colname).cast('float'))
-
                 for colname in ['City', 'County', 'State', 'Timezone']:
                     if colname in accidents_df.columns:
                         accidents_df = accidents_df.withColumn(colname, lower(trim(col(colname))))
-
                 if 'Start_Time' in accidents_df.columns and 'End_Time' in accidents_df.columns:
                     accidents_df = accidents_df.filter(col('Start_Time') < col('End_Time'))
-
                 if 'Severity' in accidents_df.columns:
                     accidents_df = accidents_df.filter(col('Severity').isin([1,2,3,4]))
-
                 if 'ID' in accidents_df.columns:
                     accidents_df = accidents_df.dropDuplicates(['ID'])
-
                 accidents_df = accidents_df.dropna()
                 accidents_df = accidents_df.repartition(8)
-
+                accidents_df = accidents_df.persist()
                 silver_accidents_path = os.path.join("Silver", "accidents", year, month, day)
                 accidents_df.write.mode("overwrite").parquet(silver_accidents_path)
                 logger.info(f"Écriture Parquet dans {silver_accidents_path}")
                 accidents_df.write.mode("append").format("hive").saveAsTable("silver.accidents")
                 logger.info(f"Écriture dans Hive : silver.accidents")
+                accidents_df.unpersist()
 
                 weather_cols = [
                     'ID', 'Weather_Timestamp', 'Temperature(F)', 'Humidity(%)', 'Pressure(in)',
@@ -97,20 +90,20 @@ def run_preprocessor():
                         else:
                             df = df.withColumn(colname, lit(None).cast('string'))
                 weather_df = df.select(weather_cols)
-
                 for colname in ['Wind_Direction', 'Weather_Condition']:
                     if colname in weather_df.columns:
                         weather_df = weather_df.withColumn(colname, lower(trim(col(colname))))
-
                 if 'ID' in weather_df.columns:
                     weather_df = weather_df.dropDuplicates(['ID'])
                 weather_df = weather_df.dropna()
                 weather_df = weather_df.repartition(8)
+                weather_df = weather_df.persist()
                 silver_weather_path = os.path.join("Silver", "weather", year, month, day)
                 weather_df.write.mode("overwrite").parquet(silver_weather_path)
                 logger.info(f"Écriture Parquet dans {silver_weather_path}")
                 weather_df.write.mode("append").format("hive").saveAsTable("silver.weather")
                 logger.info(f"Écriture dans Hive : silver.weather")
+                weather_df.unpersist()
 
                 road_cols = [
                     'ID', 'Amenity', 'Bump', 'Crossing', 'Junction', 'Traffic_Signal'
@@ -125,19 +118,19 @@ def run_preprocessor():
                 for colname in ['Amenity', 'Bump', 'Crossing', 'Junction', 'Traffic_Signal']:
                     if colname in road_df.columns:
                         road_df = road_df.withColumn(colname, when(col(colname) == "True", 1).when(col(colname) == "False", 0).otherwise(None))
-
                 if 'ID' in road_df.columns:
                     road_df = road_df.dropDuplicates(['ID'])
                 road_df = road_df.dropna()
                 road_df = road_df.repartition(8)
+                road_df = road_df.persist()
                 silver_road_path = os.path.join("Silver", "road_features", year, month, day)
                 road_df.write.mode("overwrite").parquet(silver_road_path)
                 logger.info(f"Écriture Parquet dans {silver_road_path}")
                 road_df.write.mode("append").format("hive").saveAsTable("silver.road_features")
                 logger.info(f"Écriture dans Hive : silver.road_features")
+                road_df.unpersist()
     spark.stop()
     logger.info("Fin du preprocessor.")
-
 
     spark = SparkSession.builder \
         .appName("ExportHiveToParquet") \
@@ -192,4 +185,3 @@ if __name__ == "__main__":
     run_preprocessor()
     check_hive_tables()
     explore_silver_tables()
-

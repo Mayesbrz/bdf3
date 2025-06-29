@@ -23,7 +23,6 @@ def run_feeder():
         if f.endswith(".csv") and len(f) >= 14
     ]
     csv_files.sort(key=lambda x: datetime.strptime(x.replace(".csv", ""), "%d-%m-%Y"))
-    # Prendre les fichiers du mois 01/2025 et les 3 premiers jours (01, 02, 03)
     csv_files = [f for f in csv_files if f.endswith(".csv") and f[3:5] == "01" and f[6:10] == "2025"]
     csv_files = sorted(csv_files, key=lambda x: int(x[:2]))[:3]
 
@@ -62,12 +61,17 @@ def run_feeder():
                 df = df.withColumnRenamed(column, new_column)
         df = df.withColumn("situation_date", lit(dt.strftime("%Y-%m-%d")).cast("date"))
         cumulative_df = df if cumulative_df is None else cumulative_df.unionByName(df)
+
         if is_last_file:
+            cumulative_df = cumulative_df.cache()
             final_path = os.path.join(output_path)
             logger.info(f"Écriture du fichier cumulé dans : {final_path}")
             cumulative_df.write.mode("overwrite").parquet(final_path)
+            cumulative_df.unpersist()
         else:
+            df = df.cache()
             df.write.mode("overwrite").parquet(output_path)
+            df.unpersist()
             logger.info(f"Fichier écrit dans : {output_path}")
 
     spark.stop()
