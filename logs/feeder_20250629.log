@@ -1,0 +1,6 @@
+2025-06-29 12:31:29,196 - INFO - Démarrage du feeder.
+2025-06-29 12:31:32,721 - INFO - Données déjà présentes pour le 01-01-2025, lecture pour accumulation uniquement.
+2025-06-29 12:31:34,678 - INFO - Données déjà présentes pour le 02-01-2025, lecture pour accumulation uniquement.
+2025-06-29 12:31:34,853 - INFO - Traitement du fichier data/03-01-2025.csv pour la date 03-01-2025
+2025-06-29 12:31:34,997 - INFO - Écriture du fichier cumulé dans : Bronze/2025/01/03
+2025-06-29 12:32:02,701 - INFO - Traitement Spark terminé avec succès.

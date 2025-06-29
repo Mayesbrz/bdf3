@@ -1,0 +1,16 @@
+2025-06-29 13:43:39,574 - INFO - Démarrage du MLTraining.
+2025-06-29 13:44:47,770 - INFO - Démarrage du MLTraining.
+2025-06-29 13:46:22,336 - INFO - Démarrage du MLTraining.
+2025-06-29 13:47:34,579 - INFO - Démarrage du MLTraining.
+2025-06-29 13:49:14,615 - INFO - Démarrage du MLTraining.
+2025-06-29 13:51:38,371 - INFO - Démarrage du MLTraining.
+2025-06-29 13:55:18,124 - INFO - Démarrage du MLTraining.
+2025-06-29 13:59:23,295 - INFO - Démarrage du MLTraining.
+2025-06-29 14:04:26,073 - INFO - Démarrage du MLTraining.
+2025-06-29 14:07:42,008 - INFO - Accuracy du modèle : 0.7716
+2025-06-29 14:07:44,815 - INFO - Modèle sauvegardé sous ml_model_rf
+2025-06-29 14:07:45,473 - INFO - Fin du MLTraining.
+2025-06-29 14:11:43,066 - INFO - Démarrage du MLTraining.
+2025-06-29 14:15:48,523 - INFO - Accuracy du modèle : 0.7716
+2025-06-29 14:15:50,279 - INFO - Modèle sauvegardé sous ml_model_rf
+2025-06-29 14:17:21,958 - INFO - Fin du MLTraining.
